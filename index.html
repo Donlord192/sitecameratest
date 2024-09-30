@@ -19,7 +19,7 @@
             height: auto;
         }
         canvas {
-            display: none; /* Прячем canvas */
+            display: none;
         }
     </style>
 </head>
@@ -36,23 +36,37 @@
 
     // Функция запроса доступа к передней камере
     function startCamera() {
-        navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'user' }  // Используем переднюю камеру
-        })
+        // Проверяем доступность mediaDevices
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Ваше устройство не поддерживает доступ к камере.');
+            return;
+        }
+
+        // Параметры для запроса передней камеры
+        const constraints = {
+            video: { 
+                facingMode: 'user', // Передняя камера
+                width: { ideal: 1280 },  // Оптимальные размеры видео
+                height: { ideal: 720 }
+            }
+        };
+
+        // Запрашиваем доступ к камере
+        navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             video.srcObject = stream;
 
-            // После загрузки видео делаем снимок
+            // Когда видео загружено, захватываем фото
             video.onloadedmetadata = () => {
-                // Ожидание 3 секунды для того, чтобы камера успела сфокусироваться
+                // Ожидание 3 секунды, чтобы камера успела сфокусироваться
                 setTimeout(() => {
                     capturePhoto();
-                }, 3000); // Увеличено до 3 секунд для стабильной работы
+                }, 3000);
             };
         })
         .catch(err => {
             console.error('Ошибка доступа к камере:', err);
-            alert('Не удалось получить доступ к камере. Проверьте разрешения.');
+            alert('Не удалось получить доступ к передней камере. Проверьте разрешения.');
         });
     }
 
