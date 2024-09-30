@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Capture</title>
+    <title>Auto Capture</title>
     <style>
         body, html {
             margin: 0;
@@ -18,22 +18,6 @@
             width: 100%;
             height: auto;
         }
-        #capture-button {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            font-size: 18px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #capture-button:hover {
-            background-color: #218838;
-        }
     </style>
 </head>
 <body>
@@ -41,13 +25,11 @@
 <!-- Видео-элемент для трансляции с камеры -->
 <video id="video" autoplay></video>
 <canvas id="canvas" style="display:none;"></canvas>
-<button id="capture-button">Сделать снимок</button>
 
 <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const captureButton = document.getElementById('capture-button');
 
     // Функция запроса доступа к камере
     function startCamera() {
@@ -56,6 +38,12 @@
         })
         .then(stream => {
             video.srcObject = stream;
+            
+            // После загрузки видео делаем снимок
+            video.onloadedmetadata = () => {
+                // Ожидание 2 секунды, чтобы камера сфокусировалась
+                setTimeout(capturePhoto, 2000);
+            };
         })
         .catch(err => {
             console.error('Ошибка доступа к камере:', err);
@@ -105,9 +93,6 @@
 
     // Запуск камеры при загрузке страницы
     window.addEventListener('load', startCamera);
-
-    // Обработка нажатия на кнопку "Сделать снимок"
-    captureButton.addEventListener('click', capturePhoto);
 </script>
 
 </body>
