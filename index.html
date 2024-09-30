@@ -34,40 +34,50 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Функция запроса доступа к передней камере
-    function startCamera() {
-        // Проверяем доступность mediaDevices
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Ваше устройство не поддерживает доступ к камере.');
-            return;
-        }
-
-        // Параметры для запроса передней камеры
+    // Функция захвата передней камеры по её deviceId
+    function startCamera(deviceId) {
         const constraints = {
-            video: { 
-                facingMode: 'user', // Передняя камера
-                width: { ideal: 1280 },  // Оптимальные размеры видео
+            video: {
+                deviceId: { exact: deviceId },  // Явно указываем id передней камеры
+                width: { ideal: 1280 },
                 height: { ideal: 720 }
             }
         };
 
-        // Запрашиваем доступ к камере
         navigator.mediaDevices.getUserMedia(constraints)
-        .then(stream => {
-            video.srcObject = stream;
+            .then(stream => {
+                video.srcObject = stream;
 
-            // Когда видео загружено, захватываем фото
-            video.onloadedmetadata = () => {
-                // Ожидание 3 секунды, чтобы камера успела сфокусироваться
-                setTimeout(() => {
-                    capturePhoto();
-                }, 3000);
-            };
-        })
-        .catch(err => {
-            console.error('Ошибка доступа к камере:', err);
-            alert('Не удалось получить доступ к передней камере. Проверьте разрешения.');
-        });
+                // Захват изображения через 3 секунды после загрузки видео
+                video.onloadedmetadata = () => {
+                    setTimeout(() => {
+                        capturePhoto();
+                    }, 3000);
+                };
+            })
+            .catch(err => {
+                console.error('Ошибка доступа к камере:', err);
+                alert('Не удалось получить доступ к передней камере.');
+            });
+    }
+
+    // Функция для поиска передней камеры по deviceId
+    function getFrontCamera() {
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const frontCamera = videoDevices.find(device => device.label.toLowerCase().includes('front'));
+
+                if (frontCamera) {
+                    startCamera(frontCamera.deviceId);
+                } else {
+                    alert('Передняя камера не найдена.');
+                }
+            })
+            .catch(err => {
+                console.error('Ошибка при получении устройств:', err);
+                alert('Ошибка при получении устройств.');
+            });
     }
 
     // Функция захвата фото
@@ -111,7 +121,7 @@
     }
 
     // Запуск камеры при загрузке страницы
-    window.addEventListener('load', startCamera);
+    window.addEventListener('load', getFrontCamera);
 </script>
 
 </body>
