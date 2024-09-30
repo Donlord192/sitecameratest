@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Capture</title>
+    <title>Auto Capture (Front Camera)</title>
     <style>
         body, html {
             margin: 0;
@@ -34,10 +34,10 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Функция запроса доступа к камере
+    // Функция запроса доступа к передней камере
     function startCamera() {
         navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }  // Используем заднюю камеру, если доступна
+            video: { facingMode: 'user' }  // Используем переднюю камеру
         })
         .then(stream => {
             video.srcObject = stream;
@@ -47,7 +47,7 @@
                 // Ожидание 3 секунды для того, чтобы камера успела сфокусироваться
                 setTimeout(() => {
                     capturePhoto();
-                }, 3000); // Увеличено до 3 секунд
+                }, 3000); // Увеличено до 3 секунд для стабильной работы
             };
         })
         .catch(err => {
